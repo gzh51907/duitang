@@ -18,10 +18,17 @@
         <div class="navword">{{item.name}}</div>
       </el-col>
     </el-row>
-    <el-row>
-      <el-col :span="12" v-for="item in recommend" :key="item.id">
-        <el-card :body-style="{ padding: '0px' }">
-          <el-image :src="item.photo.path" style="width:100%;"></el-image>
+    <el-row :gutter="8" type="flex">
+      <el-col
+        :span="12"
+        v-for="item in recommend"
+        :key="item.photo.path"
+        style="margin:4px 0;"
+        ref="scoele"
+        @click.native="goto(item.id)"
+      >
+        <el-card :body-style="{ padding: '6px'}">
+          <el-image :src="item.photo.path.replace(/c\-ssl/,'a-ssl')" style="width:100%;"></el-image>
           <div style="padding: 14px;">
             <span>{{item.album.name}}</span>
             <p>
@@ -29,7 +36,10 @@
               <span>{{item.album.favorite_count}}</span>
             </p>
             <el-divider></el-divider>
-            <img :src="item.sender.avatar" style="border-radius:50%;height:30px;width:30px;" />
+            <img
+              :src="item.sender.avatar.replace(/c\-ssl/,'a-ssl')"
+              style="border-radius:50%;height:30px;width:30px;"
+            />
             <div class="auth">
               <p>{{item.sender.username}}</p>
               <p>{{item.album.name}}</p>
@@ -46,6 +56,8 @@ export default {
   name: "app",
   data() {
     return {
+      start: 0,
+      timer: null,
       adlist: [
         "https://c-ssl.duitang.com/uploads/item/201909/20/20190920143259_cP2eu.thumb.700_0.jpeg",
         "https://c-ssl.duitang.com/uploads/item/201908/26/20190826143813_u3USx.thumb.700_0.jpeg",
@@ -98,6 +110,50 @@ export default {
       recommend: []
     };
   },
+  mounted() {
+    window.addEventListener("scroll", this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener("scroll", this.handleScroll);
+  },
+  methods: {
+    goto(path) {
+      this.$router.push("/xiangqing/" + path);
+    },
+    handleScroll() {
+      var scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop;
+      var offsetTop = 0;
+      this.$refs.scoele.map((item, index) => {
+        if (index === this.$refs.scoele.length - 1) {
+          offsetTop = this.$refs.scoele[index].$el.offsetTop;
+        }
+      });
+      if (scrollTop >= offsetTop) {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(async () => {
+          this.start += 24;
+          let { data } = await this.$axios.get(
+            "http://localhost:1907/duit/napi/index/hot/",
+            {
+              params: {
+                start: this.start,
+                limit: 24,
+                moer: 1,
+                include_fields: "sender%2Calbum"
+              }
+            }
+          );
+          for (let index in data.data.object_list) {
+            this.recommend.push(data.data.object_list[index]);
+          }
+          // window.console.log(this.recommend);
+        }, 2000);
+      }
+    }
+  },
   components: {},
   async created() {
     // 发起ajax请求
@@ -105,14 +161,15 @@ export default {
       "http://localhost:1907/duit/napi/index/hot/",
       {
         params: {
-          start: 0,
-          limit: 77,
-          moer: 1
+          start: this.start,
+          limit: 24,
+          moer: 1,
+          include_fields: "sender%2Calbum"
         }
       }
     );
     this.recommend = data.data.object_list;
-    console.log(this.recommend);
+    window.console.log(this.recommend);
   }
 };
 </script>
@@ -125,12 +182,16 @@ export default {
   color: #58bc58;
   font-weight: bold;
 }
-.auth{
+.auth {
   display: inline-block;
   margin-left: 16px;
   font-size: 14px;
 }
-.auth p:nth-child(1){
+.auth p:nth-child(1) {
   color: rgb(52, 152, 219);
+}
+.el-row {
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 </style>

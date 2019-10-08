@@ -1,6 +1,10 @@
 const express = require('express');
 const Router = express.Router();
 const proxy = require('http-proxy-middleware');
+const request = require('request');
+const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -34,6 +38,33 @@ let kadMiddleware = proxy({
 Router.get('/duit/*', kadMiddleware, (req, res) => {
     res.send('data')
 })
+
+Router.get('/creeper/:id', (req, res) => {
+    request('https://m.duitang.com/blog/?id=1129008001', (err, resp, body) => {
+        let $ = cheerio.load(body);//cheerio使用jq封装的一个模块
+        // 遍历每一个商品
+        let goodlist = [];
+        $('.goods-list-v2 ul li').each((index, item) => {
+            console.log(666)
+            let $li = $(item);
+            console.log($li);
+            let imgsrc = $li.find('.gl-i-wrap .p-img a img').attr('src');//图片路径
+            //  提取文件名：
+            let fileName = path.basename(imgsrc);
+            let goods = {
+                price: $li.find('.p-price strong i').text(),
+                VIPprice: $li.find('.p-price span em').text(),
+                name: $li.find('.p-name a em').text(),
+                comment: $li.find('.p-commit strong a').text(),
+                shop: $li.find('.p-shop span a').text(),
+                imgsrc: 'imgs/' + fileName
+            };
+            goodlist.push(goods);
+            request(imgsrc).pipe(fs.createWriteStream('./imgs/' + fileName));
+        });
+        res.send(goodlist);
+    })
+});
 
 // 使用路由
 app.use(Router)

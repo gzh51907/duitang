@@ -4,6 +4,7 @@ import Home from "../pages/Home.vue";
 import Reg from "../pages/Reg.vue";
 import Cart from "../pages/Cart.vue";
 import Login from "../pages/Login.vue";
+import XQ from "../pages/XQ.vue";
 import NotFound from "../pages/NotFound.vue";
 Vue.use(vueRouter);
 let router = new vueRouter({
@@ -15,6 +16,12 @@ let router = new vueRouter({
     {
         path: '/',  //当浏览器地址为/home时，显示Home组件的内容
         redirect: '/home'
+    },
+    // 动态路由
+    {
+        name:'xiangqing',
+        path:'/xiangqing/:id',
+        component:XQ    
     },
     {
         name: 'cart',
