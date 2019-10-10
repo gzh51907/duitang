@@ -117,8 +117,8 @@ export default {
     window.removeEventListener("scroll", this.handleScroll);
   },
   methods: {
-    goto(path) {
-      this.$router.push("/xiangqing/" + path);
+    goto(id) {
+      this.$router.push({ name: "xiangqing", params: {id} });
     },
     handleScroll() {
       var scrollTop =
@@ -141,7 +141,7 @@ export default {
               params: {
                 start: this.start,
                 limit: 24,
-                moer: 1,
+                more: 1,
                 include_fields: "sender%2Calbum"
               }
             }
@@ -150,7 +150,7 @@ export default {
             this.recommend.push(data.data.object_list[index]);
           }
           // window.console.log(this.recommend);
-        }, 2000);
+        }, 1000);
       }
     }
   },
@@ -163,13 +163,13 @@ export default {
         params: {
           start: this.start,
           limit: 24,
-          moer: 1,
+          more: 1,
           include_fields: "sender%2Calbum"
         }
       }
     );
     this.recommend = data.data.object_list;
-    window.console.log(this.recommend);
+    // window.console.log(this.recommend);
   }
 };
 </script>

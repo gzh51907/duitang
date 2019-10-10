@@ -31,7 +31,7 @@ let kadMiddleware = proxy({
     // 修改请求源地址
     changeOrigin: true,
     pathRewrite: {
-        "^/duit": "/"
+        "^/duit": ""
     }
 });
 
@@ -39,35 +39,56 @@ Router.get('/duit/*', kadMiddleware, (req, res) => {
     res.send('data')
 })
 
-Router.get('/creeper/:id', (req, res) => {
-    request('https://m.duitang.com/blog/?id=1129008001', (err, resp, body) => {
+Router.get('/creeper', (req, res) => {
+    let {id} = req.query;
+    request(`https://m.duitang.com/blog/?id=${id}`, (err, resp, body) => {
         let $ = cheerio.load(body);//cheerio使用jq封装的一个模块
         // 遍历每一个商品
-        let goodlist = [];
-        $('.goods-list-v2 ul li').each((index, item) => {
-            console.log(666)
-            let $li = $(item);
-            console.log($li);
-            let imgsrc = $li.find('.gl-i-wrap .p-img a img').attr('src');//图片路径
-            //  提取文件名：
-            let fileName = path.basename(imgsrc);
-            let goods = {
-                price: $li.find('.p-price strong i').text(),
-                VIPprice: $li.find('.p-price span em').text(),
-                name: $li.find('.p-name a em').text(),
-                comment: $li.find('.p-commit strong a').text(),
-                shop: $li.find('.p-shop span a').text(),
-                imgsrc: 'imgs/' + fileName
+        let imgsrc = $('.css-8atqhb.e1cybf983').attr('src');//图片路径
+        let picTitle = $('.css-62x3yt.e1cybf984').text();
+        let gotoH = $('.userName').attr('href');//去到个人页面
+        let humName = $('.userName h5').text();
+        let humPic = $('.css-1irt2zo.e1cybf985 a img').attr('src');
+        let humColl = $('.collectTo span').text();
+        let gotoC = $('.collectTo').attr('href');//去到收藏夹
+        let pDate = $('.css-1byvyem.e1cybf986').text();
+        let aTage = [];
+        $('.tag.am-tag.am-tag-normal .am-tag-text').each((index, item) => {
+            let tages = {
+                tageName: $(item).text()
             };
-            goodlist.push(goods);
-            request(imgsrc).pipe(fs.createWriteStream('./imgs/' + fileName));
+            aTage.push(tages);
         });
-        res.send(goodlist);
+        let colNum = $('.am-flexbox.am-flexbox-justify-between.am-flexbox-align-center span').text().replace(/[^0-9]/ig,"");
+        let ali = [];
+        $('.css-1nlif61.e6c17h94 li').each((index, item) => {
+            let $li = $(item);
+            let colls = {
+                cover: $li.find('.css-x5e2fy.e6c17h90').attr('src'),//图片路径
+                collName: $li.find('.css-xblt0y.e6c17h92').text(),
+                collHum: $li.find('.css-10joy7a.e6c17h93').text(),
+            };
+            ali.push(colls);
+        });
+        let inf = {
+            imgsrc,
+            picTitle,
+            gotoH,
+            humName,
+            humPic,
+            humColl,
+            gotoC,
+            pDate,
+            aTage,
+            colNum,
+            ali
+        }
+        res.send(inf);
     })
 });
 
 // 使用路由
-app.use(Router)
+app.use(Router);
 
 app.listen(1907, () => {
     console.log(`server is runing on port 1907`)
